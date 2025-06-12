@@ -77,7 +77,7 @@ stages:
             backendAzureRmResourceGroupName: $(rm-rg-name)
             backendAzureRmStorageAccountName: $(rm-account-name)
             backendAzureRmContainerName: $(rm-container-name)
-            backendAzureRmKey: 'dev.terraform.tfstate'
+            backendAzureRmKey: 'stage.terraform.tfstate'
 
         - task: TerraformTask@5
           inputs:
@@ -118,7 +118,7 @@ stages:
             backendAzureRmResourceGroupName: $(rm-rg-name)
             backendAzureRmStorageAccountName: $(rm-account-name)
             backendAzureRmContainerName: $(rm-container-name)
-            backendAzureRmKey: 'dev.terraform.tfstate'
+            backendAzureRmKey: 'prod.terraform.tfstate'
 
         - task: TerraformTask@5
           inputs:
