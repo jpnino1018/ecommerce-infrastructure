@@ -1,0 +1,126 @@
+trigger:
+  branches:
+    include:
+      - main
+      - stage
+      - develop
+
+pool:
+  name: my-machine
+
+variables:
+  tf_version: '1.8.5'
+
+stages:
+
+# === DEV STAGE ===
+- stage: Terraform_Dev
+  displayName: "Terraform Deploy - Dev"
+  condition: eq(variables['Build.SourceBranchName'], 'develop')
+  jobs:
+    - job: Deploy_Dev
+      displayName: "Deploy Dev Environment"
+      steps:
+        - checkout: self
+          clean: true
+
+        - task: AzureCLI@2
+          inputs:
+            azureSubscription: 'azure-connection'
+            scriptType: 'ps'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              Write-Host "Logging into Azure (Dev)"
+              az account show
+
+        - script: terraform init -input=false
+          workingDirectory: '$(Build.SourcesDirectory)/envs/dev'
+          displayName: 'Terraform Init (Dev)'
+
+        - script: terraform validate
+          workingDirectory: '$(Build.SourcesDirectory)/envs/dev'
+          displayName: 'Terraform Validate (Dev)'
+
+        - script: terraform plan -input=false -var-file="dev.tfvars" -out=tfplan
+          workingDirectory: '$(Build.SourcesDirectory)/envs/dev'
+          displayName: 'Terraform Plan (Dev)'
+
+        - script: terraform apply -input=false -auto-approve tfplan
+          workingDirectory: '$(Build.SourcesDirectory)/envs/dev'
+          displayName: 'Terraform Apply (Dev)'
+
+# === STAGE STAGE ===
+- stage: Terraform_Stage
+  displayName: "Terraform Deploy - Stage"
+  condition: eq(variables['Build.SourceBranchName'], 'stage')
+  jobs:
+    - job: Deploy_Stage
+      displayName: "Deploy Stage Environment"
+      steps:
+        - checkout: self
+          clean: true
+
+        - task: AzureCLI@2
+          inputs:
+            azureSubscription: 'azure-connection'
+            scriptType: 'ps'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              Write-Host "Logging into Azure (Dev)"
+              az account show
+
+        - script: terraform init -input=false
+          workingDirectory: '$(Build.SourcesDirectory)/envs/stage'
+          displayName: 'Terraform Init (Stage)'
+
+        - script: terraform validate
+          workingDirectory: '$(Build.SourcesDirectory)/envs/stage'
+          displayName: 'Terraform Validate (Stage)'
+
+        - script: terraform plan -input=false -var-file="stage.tfvars" -out=tfplan
+          workingDirectory: '$(Build.SourcesDirectory)/envs/stage'
+          displayName: 'Terraform Plan (Stage)'
+
+        - script: terraform apply -input=false -auto-approve tfplan
+          workingDirectory: '$(Build.SourcesDirectory)/envs/stage'
+          displayName: 'Terraform Apply (Stage)'
+
+# === PROD STAGE ===
+- stage: Terraform_Prod
+  displayName: "Terraform Deploy - Prod"
+  condition: eq(variables['Build.SourceBranchName'], 'main')
+  jobs:
+    - job: Deploy_Prod
+      displayName: "Deploy Prod Environment"
+      steps:
+        - checkout: self
+          clean: true
+
+        - task: AzureCLI@2
+          inputs:
+            azureSubscription: 'azure-connection'
+            scriptType: 'ps'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              Write-Host "Logging into Azure (Dev)"
+              az account show
+
+        - script: terraform init -input=false
+          workingDirectory: '$(Build.SourcesDirectory)/envs/prod'
+          displayName: 'Terraform Init (Prod)'
+
+        - script: terraform validate
+          workingDirectory: '$(Build.SourcesDirectory)/envs/prod'
+          displayName: 'Terraform Validate (Prod)'
+        
+        - script: dir
+          workingDirectory: '$(Build.SourcesDirectory)/envs/prod'
+          displayName: 'List files in prod dir'
+
+        - script: terraform plan -input=false -var-file="prod.tfvars" -out=tfplan
+          workingDirectory: '$(Build.SourcesDirectory)/envs/prod'
+          displayName: 'Terraform Plan (Prod)'
+
+        - script: terraform apply -input=false -auto-approve tfplan
+          workingDirectory: '$(Build.SourcesDirectory)/envs/prod'
+          displayName: 'Terraform Apply (Prod)'
