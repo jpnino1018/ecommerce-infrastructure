@@ -10,6 +10,9 @@ pool:
 
 variables:
   tf_version: '1.8.5'
+  rm-rg-name: 'rg-terraform-state'
+  rm-account-name: 'ecommerceinfrastrgacc'
+  rm.container-name: 'tfstate'
 
 stages:
 
@@ -24,39 +27,35 @@ stages:
         - checkout: self
           clean: true
 
-        - task: TerraformInstaller@1
+        - task: TerraformTask@5
           inputs:
-            terraformVersion: '$(tf_version)'
-
-        - task: TerraformCLI@2
-          displayName: 'Terraform Init (Dev)'
-          inputs:
+            provider: 'azurerm'
             command: 'init'
-            workingDirectory: '$(Build.SourcesDirectory)/envs/dev'
-            backendType: 'selfConfigured'
-            environmentServiceName: 'azure-connection'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/dev'
+            backendServiceArm: 'azure-connection'
+            backendAzureRmResourceGroupName: $(rm-rg-name)
+            backendAzureRmStorageAccountName: $(rm-account-name)
+            backendAzureRmContainerName: $(rm-container-name)
+            backendAzureRmKey: 'dev.terraform.tfstate'
 
-        - task: TerraformCLI@2
-          displayName: 'Terraform Validate (Dev)'
+        - task: TerraformTask@5
           inputs:
+            provider: 'azurerm'
             command: 'validate'
-            workingDirectory: '$(Build.SourcesDirectory)/envs/dev'
-
-        - task: TerraformCLI@2
-          displayName: 'Terraform Plan (Dev)'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/dev'
+        
+        - task: TerraformTask@5
           inputs:
+            provider: 'azurerm'
             command: 'plan'
-            workingDirectory: '$(Build.SourcesDirectory)/envs/dev'
-            commandOptions: '-input=false -var-file="dev.tfvars" -out=tfplan'
-            environmentServiceName: 'azure-connection'
+            environmentServiceNameAzureRM: 'azure-connection'
 
-        - task: TerraformCLI@2
-          displayName: 'Terraform Apply (Dev)'
+        - task: TerraformTask@5
           inputs:
+            provider: 'azurerm'
             command: 'apply'
-            workingDirectory: '$(Build.SourcesDirectory)/envs/dev'
-            commandOptions: '-input=false -auto-approve tfplan'
-            environmentServiceName: 'azure-connection'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/dev'
+            environmentServiceNameAzureRM: 'azure-connection'
 
 # === STAGE STAGE ===
 - stage: Terraform_Stage
@@ -69,39 +68,35 @@ stages:
         - checkout: self
           clean: true
 
-        - task: TerraformInstaller@1
+        - task: TerraformTask@5
           inputs:
-            terraformVersion: '$(tf_version)'
-
-        - task: TerraformCLI@2
-          displayName: 'Terraform Init (Stage)'
-          inputs:
+            provider: 'azurerm'
             command: 'init'
-            workingDirectory: '$(Build.SourcesDirectory)/envs/stage'
-            backendType: 'selfConfigured'
-            environmentServiceName: 'azure-connection'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/stage'
+            backendServiceArm: 'azure-connection'
+            backendAzureRmResourceGroupName: $(rm-rg-name)
+            backendAzureRmStorageAccountName: $(rm-account-name)
+            backendAzureRmContainerName: $(rm-container-name)
+            backendAzureRmKey: 'dev.terraform.tfstate'
 
-        - task: TerraformCLI@2
-          displayName: 'Terraform Validate (Stage)'
+        - task: TerraformTask@5
           inputs:
+            provider: 'azurerm'
             command: 'validate'
-            workingDirectory: '$(Build.SourcesDirectory)/envs/stage'
-
-        - task: TerraformCLI@2
-          displayName: 'Terraform Plan (Stage)'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/stage'
+        
+        - task: TerraformTask@5
           inputs:
+            provider: 'azurerm'
             command: 'plan'
-            workingDirectory: '$(Build.SourcesDirectory)/envs/stage'
-            commandOptions: '-input=false -var-file="stage.tfvars" -out=tfplan'
-            environmentServiceName: 'azure-connection'
+            environmentServiceNameAzureRM: 'azure-connection'
 
-        - task: TerraformCLI@2
-          displayName: 'Terraform Apply (Stage)'
+        - task: TerraformTask@5
           inputs:
+            provider: 'azurerm'
             command: 'apply'
-            workingDirectory: '$(Build.SourcesDirectory)/envs/stage'
-            commandOptions: '-input=false -auto-approve tfplan'
-            environmentServiceName: 'azure-connection'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/stage'
+            environmentServiceNameAzureRM: 'azure-connection'
 
 # === PROD STAGE ===
 - stage: Terraform_Prod
@@ -114,36 +109,32 @@ stages:
         - checkout: self
           clean: true
 
-        - task: TerraformInstaller@1
+        - task: TerraformTask@5
           inputs:
-            terraformVersion: '$(tf_version)'
-
-        - task: TerraformCLI@2
-          displayName: 'Terraform Init (Prod)'
-          inputs:
+            provider: 'azurerm'
             command: 'init'
-            workingDirectory: '$(Build.SourcesDirectory)/envs/prod'
-            backendType: 'selfConfigured'
-            environmentServiceName: 'azure-connection'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
+            backendServiceArm: 'azure-connection'
+            backendAzureRmResourceGroupName: $(rm-rg-name)
+            backendAzureRmStorageAccountName: $(rm-account-name)
+            backendAzureRmContainerName: $(rm-container-name)
+            backendAzureRmKey: 'dev.terraform.tfstate'
 
-        - task: TerraformCLI@2
-          displayName: 'Terraform Validate (Prod)'
+        - task: TerraformTask@5
           inputs:
+            provider: 'azurerm'
             command: 'validate'
-            workingDirectory: '$(Build.SourcesDirectory)/envs/prod'
-
-        - task: TerraformCLI@2
-          displayName: 'Terraform Plan (Prod)'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
+        
+        - task: TerraformTask@5
           inputs:
+            provider: 'azurerm'
             command: 'plan'
-            workingDirectory: '$(Build.SourcesDirectory)/envs/prod'
-            commandOptions: '-input=false -var-file="prod.tfvars" -out=tfplan'
-            environmentServiceName: 'azure-connection'
+            environmentServiceNameAzureRM: 'azure-connection'
 
-        - task: TerraformCLI@2
-          displayName: 'Terraform Apply (Prod)'
+        - task: TerraformTask@5
           inputs:
+            provider: 'azurerm'
             command: 'apply'
-            workingDirectory: '$(Build.SourcesDirectory)/envs/prod'
-            commandOptions: '-input=false -auto-approve tfplan'
-            environmentServiceName: 'azure-connection'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
+            environmentServiceNameAzureRM: 'azure-connection'
