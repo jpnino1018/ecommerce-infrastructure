@@ -1,4 +1,4 @@
-resource_group_name = "ecommerce-rg"
+resource_group_name = "ecommerce-rg-stage"
 location            = "eastus"
 aks_name            = "ecommerce-aks"
 node_count          = 1
