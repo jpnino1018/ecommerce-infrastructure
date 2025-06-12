@@ -4,6 +4,6 @@ variable "resource_group_name" {
 }
 
 variable "location" {
-  description = "Región de Azure (por ejemplo: eastus)"
+  description = "Región de Azure"
   type        = string
 }
