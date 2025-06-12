@@ -24,30 +24,39 @@ stages:
         - checkout: self
           clean: true
 
-        - task: AzureCLI@2
+        - task: TerraformInstaller@1
           inputs:
-            azureSubscription: 'azure-connection'
-            scriptType: 'ps'
-            scriptLocation: 'inlineScript'
-            inlineScript: |
-              Write-Host "Logging into Azure (Dev)"
-              az account show
+            terraformVersion: '$(tf_version)'
 
-        - script: terraform init -input=false
-          workingDirectory: '$(Build.SourcesDirectory)/envs/dev'
+        - task: TerraformCLI@2
           displayName: 'Terraform Init (Dev)'
+          inputs:
+            command: 'init'
+            workingDirectory: '$(Build.SourcesDirectory)/envs/dev'
+            backendType: 'selfConfigured'
+            environmentServiceName: 'azure-connection'
 
-        - script: terraform validate
-          workingDirectory: '$(Build.SourcesDirectory)/envs/dev'
+        - task: TerraformCLI@2
           displayName: 'Terraform Validate (Dev)'
+          inputs:
+            command: 'validate'
+            workingDirectory: '$(Build.SourcesDirectory)/envs/dev'
 
-        - script: terraform plan -input=false -var-file="dev.tfvars" -out=tfplan
-          workingDirectory: '$(Build.SourcesDirectory)/envs/dev'
+        - task: TerraformCLI@2
           displayName: 'Terraform Plan (Dev)'
+          inputs:
+            command: 'plan'
+            workingDirectory: '$(Build.SourcesDirectory)/envs/dev'
+            commandOptions: '-input=false -var-file="dev.tfvars" -out=tfplan'
+            environmentServiceName: 'azure-connection'
 
-        - script: terraform apply -input=false -auto-approve tfplan
-          workingDirectory: '$(Build.SourcesDirectory)/envs/dev'
+        - task: TerraformCLI@2
           displayName: 'Terraform Apply (Dev)'
+          inputs:
+            command: 'apply'
+            workingDirectory: '$(Build.SourcesDirectory)/envs/dev'
+            commandOptions: '-input=false -auto-approve tfplan'
+            environmentServiceName: 'azure-connection'
 
 # === STAGE STAGE ===
 - stage: Terraform_Stage
@@ -60,30 +69,39 @@ stages:
         - checkout: self
           clean: true
 
-        - task: AzureCLI@2
+        - task: TerraformInstaller@1
           inputs:
-            azureSubscription: 'azure-connection'
-            scriptType: 'ps'
-            scriptLocation: 'inlineScript'
-            inlineScript: |
-              Write-Host "Logging into Azure (Dev)"
-              az account show
+            terraformVersion: '$(tf_version)'
 
-        - script: terraform init -input=false
-          workingDirectory: '$(Build.SourcesDirectory)/envs/stage'
+        - task: TerraformCLI@2
           displayName: 'Terraform Init (Stage)'
+          inputs:
+            command: 'init'
+            workingDirectory: '$(Build.SourcesDirectory)/envs/stage'
+            backendType: 'selfConfigured'
+            environmentServiceName: 'azure-connection'
 
-        - script: terraform validate
-          workingDirectory: '$(Build.SourcesDirectory)/envs/stage'
+        - task: TerraformCLI@2
           displayName: 'Terraform Validate (Stage)'
+          inputs:
+            command: 'validate'
+            workingDirectory: '$(Build.SourcesDirectory)/envs/stage'
 
-        - script: terraform plan -input=false -var-file="stage.tfvars" -out=tfplan
-          workingDirectory: '$(Build.SourcesDirectory)/envs/stage'
+        - task: TerraformCLI@2
           displayName: 'Terraform Plan (Stage)'
+          inputs:
+            command: 'plan'
+            workingDirectory: '$(Build.SourcesDirectory)/envs/stage'
+            commandOptions: '-input=false -var-file="stage.tfvars" -out=tfplan'
+            environmentServiceName: 'azure-connection'
 
-        - script: terraform apply -input=false -auto-approve tfplan
-          workingDirectory: '$(Build.SourcesDirectory)/envs/stage'
+        - task: TerraformCLI@2
           displayName: 'Terraform Apply (Stage)'
+          inputs:
+            command: 'apply'
+            workingDirectory: '$(Build.SourcesDirectory)/envs/stage'
+            commandOptions: '-input=false -auto-approve tfplan'
+            environmentServiceName: 'azure-connection'
 
 # === PROD STAGE ===
 - stage: Terraform_Prod
@@ -96,31 +114,36 @@ stages:
         - checkout: self
           clean: true
 
-        - task: AzureCLI@2
+        - task: TerraformInstaller@1
           inputs:
-            azureSubscription: 'azure-connection'
-            scriptType: 'ps'
-            scriptLocation: 'inlineScript'
-            inlineScript: |
-              Write-Host "Logging into Azure (Dev)"
-              az account show
+            terraformVersion: '$(tf_version)'
 
-        - script: terraform init -input=false
-          workingDirectory: '$(Build.SourcesDirectory)/envs/prod'
+        - task: TerraformCLI@2
           displayName: 'Terraform Init (Prod)'
+          inputs:
+            command: 'init'
+            workingDirectory: '$(Build.SourcesDirectory)/envs/prod'
+            backendType: 'selfConfigured'
+            environmentServiceName: 'azure-connection'
 
-        - script: terraform validate
-          workingDirectory: '$(Build.SourcesDirectory)/envs/prod'
+        - task: TerraformCLI@2
           displayName: 'Terraform Validate (Prod)'
-        
-        - script: dir
-          workingDirectory: '$(Build.SourcesDirectory)/envs/prod'
-          displayName: 'List files in prod dir'
+          inputs:
+            command: 'validate'
+            workingDirectory: '$(Build.SourcesDirectory)/envs/prod'
 
-        - script: terraform plan -input=false -var-file="prod.tfvars" -out=tfplan
-          workingDirectory: '$(Build.SourcesDirectory)/envs/prod'
+        - task: TerraformCLI@2
           displayName: 'Terraform Plan (Prod)'
+          inputs:
+            command: 'plan'
+            workingDirectory: '$(Build.SourcesDirectory)/envs/prod'
+            commandOptions: '-input=false -var-file="prod.tfvars" -out=tfplan'
+            environmentServiceName: 'azure-connection'
 
-        - script: terraform apply -input=false -auto-approve tfplan
-          workingDirectory: '$(Build.SourcesDirectory)/envs/prod'
+        - task: TerraformCLI@2
           displayName: 'Terraform Apply (Prod)'
+          inputs:
+            command: 'apply'
+            workingDirectory: '$(Build.SourcesDirectory)/envs/prod'
+            commandOptions: '-input=false -auto-approve tfplan'
+            environmentServiceName: 'azure-connection'
