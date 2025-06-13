@@ -11,3 +11,7 @@ module "aks" {
   location            = var.location
   vnet_subnet_id      = module.network.subnet_id
 }
+
+terraform {
+  backend "azurerm" {}
+}
