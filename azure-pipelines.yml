@@ -8,11 +8,6 @@ trigger:
 pool:
   name: my-machine
 
-variables:
-  rm-rg-name: 'rg-terraform-state'
-  rm-account-name: 'ecommerceinfrastrgacc'
-  rm-container-name: 'tfstate'
-
 stages:
 
 # === DEV STAGE ===
@@ -40,11 +35,6 @@ stages:
             provider: 'azurerm'
             command: 'init'
             workingDirectory: '$(System.DefaultWorkingDirectory)/envs/dev'
-            backendServiceArm: 'azure-connection'
-            backendAzureRmResourceGroupName: '$(rm-rg-name)'
-            backendAzureRmStorageAccountName: '$(rm-account-name)'
-            backendAzureRmContainerName: '$(rm-container-name)'
-            backendAzureRmKey: 'dev.terraform.tfstate'
 
         - task: TerraformTask@5
           inputs:
@@ -65,6 +55,7 @@ stages:
             command: 'apply'
             workingDirectory: '$(System.DefaultWorkingDirectory)/envs/dev'
             environmentServiceNameAzureRM: 'azure-connection'
+
 
 # === STAGE STAGE ===
 - stage: Terraform_Stage
@@ -91,11 +82,6 @@ stages:
             provider: 'azurerm'
             command: 'init'
             workingDirectory: '$(System.DefaultWorkingDirectory)/envs/stage'
-            backendServiceArm: 'azure-connection'
-            backendAzureRmResourceGroupName: '$(rm-rg-name)'
-            backendAzureRmStorageAccountName: '$(rm-account-name)'
-            backendAzureRmContainerName: '$(rm-container-name)'
-            backendAzureRmKey: 'stage.terraform.tfstate'
 
         - task: TerraformTask@5
           inputs:
@@ -117,6 +103,7 @@ stages:
             workingDirectory: '$(System.DefaultWorkingDirectory)/envs/stage'
             environmentServiceNameAzureRM: 'azure-connection'
 
+
 # === PROD STAGE ===
 - stage: Terraform_Prod
   displayName: "Terraform Deploy - Prod"
@@ -127,68 +114,21 @@ stages:
       steps:
         - checkout: self
           clean: true
-          
+
         - task: AzureCLI@2
           inputs:
             azureSubscription: 'azure-connection'
             scriptType: 'ps'
             scriptLocation: 'inlineScript'
             inlineScript: |
-              $accountName = "ecommerceinfrastrgacc"
-              $containerName = "tfstate"
-              $resourceGroup = "rg-terraform-state"
-
-              Write-Host "`n🔎 Getting storage account key (fallback method for debugging)..."
-
-              $key = az storage account keys list --account-name $accountName --resource-group $resourceGroup --query "[0].value" -o tsv
-              if (-not $key) {
-                Write-Host "❌ Failed to retrieve storage account key."
-                exit 1
-              }
-
-              Write-Host "✅ Got key (truncated): $($key.Substring(0, 5))..."
-
-              Write-Host "`n📦 Testing key-based blob access:"
-              $keyAccess = az storage blob list `
-                --account-name $accountName `
-                --container-name $containerName `
-                --account-key $key `
-                --only-show-errors
-
-              if (-not $keyAccess) {
-                Write-Host "❌ Key-based blob listing failed."
-                exit 1
-              } else {
-                Write-Host "✅ Key-based blob listing successful."
-              }
-
-              Write-Host "`n🔐 Testing Azure AD-based blob access (login mode):"
-              try {
-                $aadAccess = az storage blob list `
-                  --account-name $accountName `
-                  --container-name $containerName `
-                  --auth-mode login `
-                  --only-show-errors
-
-                Write-Host "✅ Azure AD access successful"
-              } catch {
-                Write-Host "❌ Azure AD access FAILED"
-                Write-Host $_.Exception.Message
-                exit 1
-              }
-
-
+              az account show --output table
+          displayName: "🔍 Check Azure Subscription"
 
         - task: TerraformTask@5
           inputs:
             provider: 'azurerm'
             command: 'init'
             workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
-            backendServiceArm: 'azure-connection'
-            backendAzureRmResourceGroupName: '$(rm-rg-name)'
-            backendAzureRmStorageAccountName: '$(rm-account-name)'
-            backendAzureRmContainerName: '$(rm-container-name)'
-            backendAzureRmKey: 'prod.terraform.tfstate'
 
         - task: TerraformTask@5
           inputs:
