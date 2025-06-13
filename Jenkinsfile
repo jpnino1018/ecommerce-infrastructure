@@ -11,11 +11,11 @@ pipeline {
     }
 
     environment {
-        TF_IN_AUTOMATION = 'true'
-        ARM_CLIENT_ID     = credentials('ARM_CLIENT_ID')
-        ARM_CLIENT_SECRET = credentials('ARM_CLIENT_SECRET')
-        ARM_SUBSCRIPTION_ID = credentials('ARM_SUBSCRIPTION_ID')
-        ARM_TENANT_ID     = credentials('ARM_TENANT_ID')
+        TF_IN_AUTOMATION     = 'true'
+        ARM_CLIENT_ID        = credentials('ARM_CLIENT_ID')
+        ARM_CLIENT_SECRET    = credentials('ARM_CLIENT_SECRET')
+        ARM_SUBSCRIPTION_ID  = credentials('ARM_SUBSCRIPTION_ID')
+        ARM_TENANT_ID        = credentials('ARM_TENANT_ID')
     }
 
     stages {
@@ -58,7 +58,9 @@ pipeline {
 
     post {
         always {
-            cleanWs()
+            script {
+                cleanWs()
+            }
         }
     }
 }
