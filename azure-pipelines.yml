@@ -130,19 +130,31 @@ stages:
           
         - task: AzureCLI@2
           inputs:
-            azureSubscription: 'azure-connection'  # Your service connection
-            scriptType: 'bash'
+            azureSubscription: 'azure-connection'  # Replace with your actual service connection name
+            scriptType: 'ps'
             scriptLocation: 'inlineScript'
             inlineScript: |
-              echo "✅ Logged in as:"
-              az account show
-              echo "🔐 Identity Info:"
-              az ad signed-in-user show || echo "Service principal - not a user"
-              echo "📦 Testing Blob Access:"
-              az storage blob list \
-                --account-name ecommerceinfrastrgacc \
-                --container-name tfstate \
-                --auth-mode login || echo "❌ FAILED to access tfstate container"
+              Write-Host "✅ Logged in as:"
+              az account show 
+
+              Write-Host "🔐 Identity Info:"
+              az ad signed-in-user show 2>$null
+              if ($LASTEXITCODE -ne 0) {
+                Write-Host "⚠️ This is a service principal (not a user)"
+              }
+
+              Write-Host "📦 Testing Blob Access to the tfstate container:"
+              az storage blob list `
+                --account-name ecommerceinfrastrgacc `
+                --container-name tfstate `
+                --auth-mode login `
+                --only-show-errors
+              if ($LASTEXITCODE -ne 0) {
+                Write-Host "❌ FAILED to access tfstate container using login"
+                exit 1
+              } else {
+                Write-Host "✅ Successfully accessed tfstate container"
+              }
 
 
         - task: TerraformTask@5
