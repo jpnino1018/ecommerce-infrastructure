@@ -26,9 +26,15 @@ stages:
         - checkout: self
           clean: true
 
-        - powershell: |
-           az account show --output table
-          displayName: "🔍 Check Azure Subscription Context"
+        - task: AzureCLI@2
+          inputs:
+            azureSubscription: 'azure-connection'  # your service connection name
+            scriptType: 'ps'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              az account show --output table
+          displayName: "🔍 Check Azure Subscription (via Service Connection)"
+
 
 
         - task: TerraformTask@5
@@ -73,9 +79,14 @@ stages:
         - checkout: self
           clean: true
 
-        - powershell: |
-           az account show --output table
-          displayName: "🔍 Check Azure Subscription Context"
+        - task: AzureCLI@2
+          inputs:
+            azureSubscription: 'azure-connection'  # your service connection name
+            scriptType: 'ps'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              az account show --output table
+          displayName: "🔍 Check Azure Subscription (via Service Connection)"
 
         - task: TerraformTask@5
           inputs:
@@ -119,9 +130,15 @@ stages:
         - checkout: self
           clean: true
           
-        - powershell: |
-           az account show --output table
-          displayName: "🔍 Check Azure Subscription Context"
+        - task: AzureCLI@2
+          inputs:
+            azureSubscription: 'azure-connection'  # your service connection name
+            scriptType: 'ps'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              az account show --output table
+          displayName: "🔍 Check Azure Subscription (via Service Connection)"
+
 
         - task: TerraformTask@5
           inputs:
