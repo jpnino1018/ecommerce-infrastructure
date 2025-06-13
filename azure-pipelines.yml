@@ -82,6 +82,10 @@ stages:
             provider: 'azurerm'
             command: 'init'
             workingDirectory: '$(System.DefaultWorkingDirectory)/envs/stage'
+            backendServiceArm: 'Azure for Students(dad0afe0-0559-43a5-9469-edf299dd150a)'
+            backendAzureRmStorageAccountName: 'ecommerceinfrastrgacc'
+            backendAzureRmContainerName: 'tfstate'
+            backendAzureRmKey: 'stage.tfstate'
 
         - task: TerraformTask@5
           inputs:
@@ -129,6 +133,10 @@ stages:
             provider: 'azurerm'
             command: 'init'
             workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
+            backendServiceArm: 'Azure for Students(1)(dad0afe0-0559-43a5-9469-edf299dd150a)'
+            backendAzureRmStorageAccountName: 'ecommerceinfrastrgacc'
+            backendAzureRmContainerName: 'tfstate'
+            backendAzureRmKey: 'prod.tfstate'
 
         - task: TerraformTask@5
           inputs:
