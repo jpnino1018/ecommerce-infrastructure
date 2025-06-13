@@ -1,0 +1,151 @@
+trigger:
+  branches:
+    include:
+      - main
+      - stage
+      - develop
+
+pool:
+  name: my-machine
+
+stages:
+
+# === DEV STAGE ===
+- stage: Terraform_Dev
+  displayName: "Terraform Deploy - Dev"
+  condition: eq(variables['Build.SourceBranchName'], 'develop')
+  jobs:
+    - job: Deploy_Dev
+      displayName: "Deploy Dev Environment"
+      steps:
+        - checkout: self
+          clean: true
+
+        - task: AzureCLI@2
+          inputs:
+            azureSubscription: 'azure-connection'
+            scriptType: 'ps'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              az account show --output table
+          displayName: "🔍 Check Azure Subscription"
+
+        - task: TerraformTask@5
+          inputs:
+            provider: 'azurerm'
+            command: 'init'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/dev'
+
+        - task: TerraformTask@5
+          inputs:
+            provider: 'azurerm'
+            command: 'validate'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/dev'
+
+        - task: TerraformTask@5
+          inputs:
+            provider: 'azurerm'
+            command: 'plan'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/dev'
+            environmentServiceNameAzureRM: 'azure-connection'
+
+        - task: TerraformTask@5
+          inputs:
+            provider: 'azurerm'
+            command: 'apply'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/dev'
+            environmentServiceNameAzureRM: 'azure-connection'
+
+
+# === STAGE STAGE ===
+- stage: Terraform_Stage
+  displayName: "Terraform Deploy - Stage"
+  condition: eq(variables['Build.SourceBranchName'], 'stage')
+  jobs:
+    - job: Deploy_Stage
+      displayName: "Deploy Stage Environment"
+      steps:
+        - checkout: self
+          clean: true
+
+        - task: AzureCLI@2
+          inputs:
+            azureSubscription: 'azure-connection'
+            scriptType: 'ps'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              az account show --output table
+          displayName: "🔍 Check Azure Subscription"
+
+        - task: TerraformTask@5
+          inputs:
+            provider: 'azurerm'
+            command: 'init'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/stage'
+
+        - task: TerraformTask@5
+          inputs:
+            provider: 'azurerm'
+            command: 'validate'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/stage'
+
+        - task: TerraformTask@5
+          inputs:
+            provider: 'azurerm'
+            command: 'plan'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/stage'
+            environmentServiceNameAzureRM: 'azure-connection'
+
+        - task: TerraformTask@5
+          inputs:
+            provider: 'azurerm'
+            command: 'apply'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/stage'
+            environmentServiceNameAzureRM: 'azure-connection'
+
+
+# === PROD STAGE ===
+- stage: Terraform_Prod
+  displayName: "Terraform Deploy - Prod"
+  condition: eq(variables['Build.SourceBranchName'], 'main')
+  jobs:
+    - job: Deploy_Prod
+      displayName: "Deploy Prod Environment"
+      steps:
+        - checkout: self
+          clean: true
+
+        - task: AzureCLI@2
+          inputs:
+            azureSubscription: 'azure-connection'
+            scriptType: 'ps'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              az account show --output table
+          displayName: "🔍 Check Azure Subscription"
+
+        - task: TerraformTask@5
+          inputs:
+            provider: 'azurerm'
+            command: 'init'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
+
+        - task: TerraformTask@5
+          inputs:
+            provider: 'azurerm'
+            command: 'validate'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
+
+        - task: TerraformTask@5
+          inputs:
+            provider: 'azurerm'
+            command: 'plan'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
+            environmentServiceNameAzureRM: 'azure-connection'
+
+        - task: TerraformTask@5
+          inputs:
+            provider: 'azurerm'
+            command: 'apply'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
+            environmentServiceNameAzureRM: 'azure-connection'
