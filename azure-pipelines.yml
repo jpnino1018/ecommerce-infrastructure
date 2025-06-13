@@ -129,31 +129,37 @@ stages:
           displayName: "🔍 Check Azure Subscription"
 
         - task: TerraformTask@5
+          displayName: "🌱 Terraform Init"
           inputs:
             provider: 'azurerm'
             command: 'init'
             workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
-            backendServiceArm: 'Azure for Students(1)(dad0afe0-0559-43a5-9469-edf299dd150a)'
+            backendServiceArm: 'azure-connection'  # Unifica nombre
             backendAzureRmStorageAccountName: 'ecommerceinfrastrgacc'
             backendAzureRmContainerName: 'tfstate'
             backendAzureRmKey: 'prod.tfstate'
 
         - task: TerraformTask@5
+          displayName: "✅ Terraform Validate"
           inputs:
             provider: 'azurerm'
             command: 'validate'
             workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
 
         - task: TerraformTask@5
+          displayName: "🧠 Terraform Plan"
           inputs:
             provider: 'azurerm'
             command: 'plan'
             workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
             environmentServiceNameAzureRM: 'azure-connection'
+            commandOptions: '-var-file="prod.tfvars" -input=false -detailed-exitcode'
 
         - task: TerraformTask@5
+          displayName: "🚀 Terraform Apply"
           inputs:
             provider: 'azurerm'
             command: 'apply'
             workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
             environmentServiceNameAzureRM: 'azure-connection'
+            commandOptions: '-var-file="prod.tfvars" -auto-approve -input=false'
