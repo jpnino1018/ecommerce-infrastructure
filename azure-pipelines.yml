@@ -130,30 +130,43 @@ stages:
           
         - task: AzureCLI@2
           inputs:
-            azureSubscription: 'azure-connection'  # Replace with your actual service connection name
+            azureSubscription: 'azure-connection'
             scriptType: 'ps'
             scriptLocation: 'inlineScript'
             inlineScript: |
-              Write-Host "✅ Logged in as:"
-              az account show 
+              $accountName = "ecommerceinfrastrgacc"
+              $containerName = "tfstate"
+              $resourceGroup = "rg-terraform-state"
 
-              Write-Host "🔐 Identity Info:"
-              az ad signed-in-user show 2>$null
-              if ($LASTEXITCODE -ne 0) {
-                Write-Host "⚠️ This is a service principal (not a user)"
+              Write-Host "`n🔎 Getting storage account key (fallback method for debugging)..."
+              try {
+                $key = az storage account keys list --account-name $accountName --resource-group $resourceGroup --query [0].value -o tsv
+                Write-Host "✅ Got key: $($key.Substring(0, 5))... (truncated)"
+
+                Write-Host "`n📦 Trying to list blobs using key-based auth as a fallback check:"
+                az storage blob list `
+                  --account-name $accountName `
+                  --container-name $containerName `
+                  --account-key $key `
+                  --only-show-errors
+              } catch {
+                Write-Host "❌ Failed to get keys or list blobs"
+                Write-Host $_.Exception.Message
+                exit 1
               }
 
-              Write-Host "📦 Testing Blob Access to the tfstate container:"
-              az storage blob list `
-                --account-name ecommerceinfrastrgacc `
-                --container-name tfstate `
-                --auth-mode login `
-                --only-show-errors
-              if ($LASTEXITCODE -ne 0) {
-                Write-Host "❌ FAILED to access tfstate container using login"
+              Write-Host "`n🔐 Now trying Azure AD login access (what Terraform uses with use_azuread_auth=true):"
+              try {
+                az storage blob list `
+                  --account-name $accountName `
+                  --container-name $containerName `
+                  --auth-mode login `
+                  --only-show-errors
+                Write-Host "✅ Azure AD access successful"
+              } catch {
+                Write-Host "❌ Azure AD access FAILED"
+                Write-Host $_.Exception.Message
                 exit 1
-              } else {
-                Write-Host "✅ Successfully accessed tfstate container"
               }
 
 
