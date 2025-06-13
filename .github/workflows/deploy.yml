@@ -1,0 +1,20 @@
+name: Deploy Terraform
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - stage
+          - prod
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/terraform.yml
+    with:
+      environment: ${{ github.event.inputs.environment }}
