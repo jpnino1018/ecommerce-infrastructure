@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        terraform 'terraform-tool' // Name you gave it in the UI
+        terraform 'terraform-tool'
     }
 
     parameters {
@@ -11,11 +11,7 @@ pipeline {
     }
 
     environment {
-        TF_IN_AUTOMATION     = 'true'
-        ARM_CLIENT_ID        = credentials('ARM_CLIENT_ID')
-        ARM_CLIENT_SECRET    = credentials('ARM_CLIENT_SECRET')
-        ARM_SUBSCRIPTION_ID  = credentials('ARM_SUBSCRIPTION_ID')
-        ARM_TENANT_ID        = credentials('ARM_TENANT_ID')
+        TF_IN_AUTOMATION = 'true'
     }
 
     stages {
@@ -25,40 +21,49 @@ pipeline {
             }
         }
 
-        stage('Terraform Init') {
+        stage('Terraform Init & Plan') {
             steps {
-                dir("envs/${params.ENV}") {
-                    sh 'terraform init -input=false'
-                }
-            }
-        }
+                withCredentials([azureServicePrincipal('azure-credentials')]) {
+                    dir("envs/${params.ENV}") {
+                        sh '''
+                            export ARM_CLIENT_ID=$AZURE_CLIENT_ID
+                            export ARM_CLIENT_SECRET=$AZURE_CLIENT_SECRET
+                            export ARM_TENANT_ID=$AZURE_TENANT_ID
+                            export ARM_SUBSCRIPTION_ID=$AZURE_SUBSCRIPTION_ID
 
-        stage('Terraform Plan') {
-            steps {
-                dir("envs/${params.ENV}") {
-                    sh 'terraform plan -out=tfplan -input=false'
+                            terraform init -input=false
+                            terraform plan -out=tfplan -input=false
+                        '''
+                    }
                 }
             }
         }
 
         stage('Terraform Apply/Destroy') {
             steps {
-                dir("envs/${params.ENV}") {
-                    script {
-                        if (params.DESTROY) {
-                            sh 'terraform destroy -auto-approve'
-                        } else {
-                            sh 'terraform apply -input=false tfplan'
+                withCredentials([azureServicePrincipal('azure-credentials')]) {
+                    dir("envs/${params.ENV}") {
+                        script {
+                            def tfCmd = params.DESTROY ?
+                                'terraform destroy -auto-approve' :
+                                'terraform apply -input=false tfplan'
+
+                            sh """
+                                export ARM_CLIENT_ID=$AZURE_CLIENT_ID
+                                export ARM_CLIENT_SECRET=$AZURE_CLIENT_SECRET
+                                export ARM_TENANT_ID=$AZURE_TENANT_ID
+                                export ARM_SUBSCRIPTION_ID=$AZURE_SUBSCRIPTION_ID
+
+                                ${tfCmd}
+                            """
                         }
                     }
                 }
             }
         }
-    }
 
-    post {
-        always {
-            script {
+        stage('Cleanup') {
+            steps {
                 cleanWs()
             }
         }
