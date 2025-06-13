@@ -8,6 +8,9 @@ trigger:
 pool:
   name: my-machine
 
+variables:
+  terraformVersion: '1.6.6'  # update to your preferred version
+
 stages:
 
 # === DEV STAGE ===
@@ -22,39 +25,30 @@ stages:
           clean: true
 
         - task: AzureCLI@2
+          displayName: "🔐 Login to Azure"
           inputs:
             azureSubscription: 'azure-connection'
             scriptType: 'ps'
             scriptLocation: 'inlineScript'
             inlineScript: |
-              az account show --output table
-          displayName: "🔍 Check Azure Subscription"
+              az account show
 
-        - task: TerraformTask@5
-          inputs:
-            provider: 'azurerm'
-            command: 'init'
-            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/dev'
+        - powershell: |
+            cd $(System.DefaultWorkingDirectory)/envs/dev
 
-        - task: TerraformTask@5
-          inputs:
-            provider: 'azurerm'
-            command: 'validate'
-            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/dev'
+            # Init (local state)
+            terraform init
 
-        - task: TerraformTask@5
-          inputs:
-            provider: 'azurerm'
-            command: 'plan'
-            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/dev'
-            environmentServiceNameAzureRM: 'azure-connection'
+            # Validate
+            terraform validate
 
-        - task: TerraformTask@5
-          inputs:
-            provider: 'azurerm'
-            command: 'apply'
-            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/dev'
-            environmentServiceNameAzureRM: 'azure-connection'
+            # Plan
+            terraform plan -var-file="dev.tfvars" -out=tfplan
+
+            # Apply
+            terraform apply -auto-approve tfplan
+          displayName: "🚀 Terraform Deploy - Dev"
+          workingDirectory: '$(System.DefaultWorkingDirectory)/envs/dev'
 
 
 # === STAGE STAGE ===
@@ -69,43 +63,23 @@ stages:
           clean: true
 
         - task: AzureCLI@2
+          displayName: "🔐 Login to Azure"
           inputs:
             azureSubscription: 'azure-connection'
             scriptType: 'ps'
             scriptLocation: 'inlineScript'
             inlineScript: |
-              az account show --output table
-          displayName: "🔍 Check Azure Subscription"
+              az account show
 
-        - task: TerraformTask@5
-          inputs:
-            provider: 'azurerm'
-            command: 'init'
-            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/stage'
-            backendServiceArm: 'Azure for Students(dad0afe0-0559-43a5-9469-edf299dd150a)'
-            backendAzureRmStorageAccountName: 'ecommerceinfrastrgacc'
-            backendAzureRmContainerName: 'tfstate'
-            backendAzureRmKey: 'stage.tfstate'
+        - powershell: |
+            cd $(System.DefaultWorkingDirectory)/envs/stage
 
-        - task: TerraformTask@5
-          inputs:
-            provider: 'azurerm'
-            command: 'validate'
-            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/stage'
-
-        - task: TerraformTask@5
-          inputs:
-            provider: 'azurerm'
-            command: 'plan'
-            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/stage'
-            environmentServiceNameAzureRM: 'azure-connection'
-
-        - task: TerraformTask@5
-          inputs:
-            provider: 'azurerm'
-            command: 'apply'
-            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/stage'
-            environmentServiceNameAzureRM: 'azure-connection'
+            terraform init
+            terraform validate
+            terraform plan -var-file="stage.tfvars" -out=tfplan
+            terraform apply -auto-approve tfplan
+          displayName: "🚀 Terraform Deploy - Stage"
+          workingDirectory: '$(System.DefaultWorkingDirectory)/envs/stage'
 
 
 # === PROD STAGE ===
@@ -120,45 +94,20 @@ stages:
           clean: true
 
         - task: AzureCLI@2
+          displayName: "🔐 Login to Azure"
           inputs:
             azureSubscription: 'Azure for Students(2)(dad0afe0-0559-43a5-9469-edf299dd150a)'
             scriptType: 'ps'
             scriptLocation: 'inlineScript'
-            inlineScript: 'az account show --output table'
-          displayName: "🔍 Check Azure Subscription"
+            inlineScript: |
+              az account show
 
-        - task: TerraformTask@5
-          displayName: "🌱 Terraform Init"
-          inputs:
-            provider: 'azurerm'
-            command: 'init'
-            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
-            backendServiceArm: 'Azure for Students(2)(dad0afe0-0559-43a5-9469-edf299dd150a)'
-            backendAzureRmStorageAccountName: 'ecommerceinfrastrgacc'
-            backendAzureRmContainerName: 'tfstate'
-            backendAzureRmKey: 'prod.tfstate'
+        - powershell: |
+            cd $(System.DefaultWorkingDirectory)/envs/prod
 
-        - task: TerraformTask@5
-          displayName: "✅ Terraform Validate"
-          inputs:
-            provider: 'azurerm'
-            command: 'validate'
-            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
-
-        - task: TerraformTask@5
-          displayName: "🧠 Terraform Plan"
-          inputs:
-            provider: 'azurerm'
-            command: 'plan'
-            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
-            commandOptions: '-var-file="prod.tfvars" -input=false -detailed-exitcode'
-            environmentServiceNameAzureRM: 'Azure for Students(2)(dad0afe0-0559-43a5-9469-edf299dd150a)'
-
-        - task: TerraformTask@5
-          displayName: "🚀 Terraform Apply"
-          inputs:
-            provider: 'azurerm'
-            command: 'apply'
-            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
-            commandOptions: '-var-file="prod.tfvars" -auto-approve -input=false'
-            environmentServiceNameAzureRM: 'Azure for Students(2)(dad0afe0-0559-43a5-9469-edf299dd150a)'
+            terraform init
+            terraform validate
+            terraform plan -var-file="prod.tfvars" -out=tfplan
+            terraform apply -auto-approve tfplan
+          displayName: "🚀 Terraform Deploy - Prod"
+          workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
