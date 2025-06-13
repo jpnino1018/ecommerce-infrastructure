@@ -1,7 +1,7 @@
 trigger:
   branches:
     include:
-      - main
+      - main  # Adjust as needed
 
 parameters:
   - name: environment
@@ -21,43 +21,28 @@ variables:
 
 stages:
   - stage: Deploy
+    displayName: Deploy ${{ parameters.environment }} environment
     jobs:
       - job: Terraform_Deployment
+        displayName: Terraform Deployment
         steps:
-          - task: UsePythonVersion@0
-            inputs:
-              versionSpec: '3.x'
-              addToPath: true
-
-          - task: TerraformInstaller@1
-            inputs:
-              terraformVersion: '1.6.6'
-
-          - script: |
-              echo "##[section]🔧 Initializing Terraform..."
-              terraform init -backend-config="key=${{ parameters.environment }}.tfstate" ./envs/${{ parameters.environment }}
-            displayName: 'Terraform Init'
-
-          - script: |
-              echo "##[section]🔍 Validating Terraform..."
-              terraform validate ./envs/${{ parameters.environment }}
-            displayName: 'Terraform Validate'
-
-          - script: |
-              echo "##[section]🧠 Planning Terraform..."
-              terraform plan -out=tfplan -input=false -var="env=${{ parameters.environment }}" ./envs/${{ parameters.environment }}
-            displayName: 'Terraform Plan'
-
-          - script: |
-              echo "##[section]🚀 Applying Terraform..."
-              terraform apply -input=false tfplan
-            displayName: 'Terraform Apply'
-
           - task: AzureCLI@2
             inputs:
               azureSubscription: 'azure-connection'
-              scriptType: 'bash'
+              scriptType: 'ps'
               scriptLocation: 'inlineScript'
               inlineScript: |
-                echo "✅ Infrastructure for ${{ parameters.environment }} deployed!"
-            displayName: '✅ Post-deployment Confirmation'
+                Write-Host "🔧 Initializing Terraform for ${{ parameters.environment }}..."
+                terraform init -backend-config="key=${{ parameters.environment }}.tfstate" .\envs\${{ parameters.environment }}
+
+                Write-Host "🔍 Validating Terraform for ${{ parameters.environment }}..."
+                terraform validate .\envs\${{ parameters.environment }}
+
+                Write-Host "🧠 Planning Terraform for ${{ parameters.environment }}..."
+                terraform plan -out=tfplan -input=false -var="env=${{ parameters.environment }}" .\envs\${{ parameters.environment }}
+
+                Write-Host "🚀 Applying Terraform plan for ${{ parameters.environment }}..."
+                terraform apply -input=false tfplan
+
+                Write-Host "✅ Deployment for ${{ parameters.environment }} completed!"
+            displayName: 'Run Terraform with PowerShell'
