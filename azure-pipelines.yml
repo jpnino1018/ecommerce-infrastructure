@@ -28,20 +28,23 @@ stages:
 
         - task: AzureCLI@2
           inputs:
-            azureSubscription: 'azure-connection'  # your service connection name
+            azureSubscription: 'azure-connection'
             scriptType: 'ps'
             scriptLocation: 'inlineScript'
             inlineScript: |
               az account show --output table
-          displayName: "🔍 Check Azure Subscription (via Service Connection)"
-
-
+          displayName: "🔍 Check Azure Subscription"
 
         - task: TerraformTask@5
           inputs:
             provider: 'azurerm'
             command: 'init'
             workingDirectory: '$(System.DefaultWorkingDirectory)/envs/dev'
+            backendServiceArm: 'azure-connection'
+            backendAzureRmResourceGroupName: '$(rm-rg-name)'
+            backendAzureRmStorageAccountName: '$(rm-account-name)'
+            backendAzureRmContainerName: '$(rm-container-name)'
+            backendAzureRmKey: 'dev.terraform.tfstate'
 
         - task: TerraformTask@5
           inputs:
@@ -76,18 +79,23 @@ stages:
 
         - task: AzureCLI@2
           inputs:
-            azureSubscription: 'azure-connection'  # your service connection name
+            azureSubscription: 'azure-connection'
             scriptType: 'ps'
             scriptLocation: 'inlineScript'
             inlineScript: |
               az account show --output table
-          displayName: "🔍 Check Azure Subscription (via Service Connection)"
+          displayName: "🔍 Check Azure Subscription"
 
         - task: TerraformTask@5
           inputs:
             provider: 'azurerm'
             command: 'init'
             workingDirectory: '$(System.DefaultWorkingDirectory)/envs/stage'
+            backendServiceArm: 'azure-connection'
+            backendAzureRmResourceGroupName: '$(rm-rg-name)'
+            backendAzureRmStorageAccountName: '$(rm-account-name)'
+            backendAzureRmContainerName: '$(rm-container-name)'
+            backendAzureRmKey: 'stage.terraform.tfstate'
 
         - task: TerraformTask@5
           inputs:
@@ -122,20 +130,23 @@ stages:
           
         - task: AzureCLI@2
           inputs:
-            azureSubscription: 'azure-connection'  # your service connection name
+            azureSubscription: 'azure-connection'
             scriptType: 'ps'
             scriptLocation: 'inlineScript'
             inlineScript: |
               az account show --output table
-          displayName: "🔍 Check Azure Subscription (via Service Connection)"
-
+          displayName: "🔍 Check Azure Subscription"
 
         - task: TerraformTask@5
           inputs:
             provider: 'azurerm'
             command: 'init'
             workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
- 
+            backendServiceArm: 'azure-connection'
+            backendAzureRmResourceGroupName: '$(rm-rg-name)'
+            backendAzureRmStorageAccountName: '$(rm-account-name)'
+            backendAzureRmContainerName: '$(rm-container-name)'
+            backendAzureRmKey: 'prod.terraform.tfstate'
 
         - task: TerraformTask@5
           inputs:
