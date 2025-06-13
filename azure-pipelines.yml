@@ -1,73 +1,57 @@
 trigger:
   branches:
     include:
-      - main  # Adjust as needed
-
-parameters:
-  - name: environment
-    displayName: Environment to deploy
-    type: string
-    default: dev
-    values:
-      - dev
-      - stage
-      - prod
+      - main
 
 pool:
   name: my-machine
 
 variables:
-  TF_IN_AUTOMATION: true
+  environment: dev
+  envDir: '$(System.DefaultWorkingDirectory)/envs/$(environment)'
 
-stages:
-  - stage: Deploy
-    displayName: Deploy ${{ parameters.environment }} environment
-    jobs:
-      - job: Terraform_Deployment
-        displayName: Terraform Deployment
-        steps:
-          - task: AzureCLI@2
-            inputs:
-              azureSubscription: 'azure-connection'
-              scriptType: 'ps'
-              scriptLocation: 'inlineScript'
-              inlineScript: |
-                $env = "${{ parameters.environment }}"
-                $envDir = "$(System.DefaultWorkingDirectory)\envs\$env"
+steps:
+  - checkout: self
 
-                Write-Host "Switching to environment directory: $envDir"
-                Set-Location $envDir
+  - task: AzureCLI@2
+    displayName: 'Terraform Deploy - $(environment)'
+    inputs:
+      azureSubscription: 'azure-connection'
+      scriptType: 'ps'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        $envName = "$(environment)"
+        $envDir = "$(envDir)"
 
-                Write-Host "🔧 Running terraform init..."
-                terraform init -backend-config="key=$env.tfstate"
+        Write-Host "Starting Terraform deployment for environment: $envName"
+        Set-Location $envDir
 
-                if ($LASTEXITCODE -ne 0) {
-                  Write-Error "terraform init failed"
-                  exit 1
-                }
+        Write-Host "Initializing Terraform..."
+        terraform init -backend-config="key=$envName.tfstate"
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "terraform init failed"
+          exit 1
+        }
 
-                Write-Host "Running terraform validate..."
-                terraform validate
-                if ($LASTEXITCODE -ne 0) {
-                  Write-Error "terraform validate failed"
-                  exit 1
-                }
+        Write-Host "Validating Terraform..."
+        terraform validate
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "terraform validate failed"
+          exit 1
+        }
 
-                Write-Host "Running terraform plan..."
-                terraform plan -input=false -var="env=$env" -out=tfplan
-                if ($LASTEXITCODE -ne 0) {
-                  Write-Error "terraform plan failed"
-                  exit 1
-                }
+        Write-Host "Planning Terraform..."
+        terraform plan -input=false -var="env=$envName" -out=tfplan
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "terraform plan failed"
+          exit 1
+        }
 
-                Write-Host "Running terraform apply..."
-                terraform apply -input=false tfplan
-                if ($LASTEXITCODE -ne 0) {
-                  Write-Error "terraform apply failed"
-                  exit 1
-                }
+        Write-Host "Applying Terraform..."
+        terraform apply -input=false tfplan
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "terraform apply failed"
+          exit 1
+        }
 
-                Write-Host "Terraform deployment for $env completed successfully!"
-            displayName: 'Terraform Deploy with PowerShell'
-
-
+        Write-Host "Terraform deployment for $envName completed successfully!"
