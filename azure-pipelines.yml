@@ -121,11 +121,10 @@ stages:
 
         - task: AzureCLI@2
           inputs:
-            azureSubscription: 'azure-connection'
+            azureSubscription: 'Azure for Students(2)(dad0afe0-0559-43a5-9469-edf299dd150a)'
             scriptType: 'ps'
             scriptLocation: 'inlineScript'
-            inlineScript: |
-              az account show --output table
+            inlineScript: 'az account show --output table'
           displayName: "🔍 Check Azure Subscription"
 
         - task: TerraformTask@5
@@ -134,7 +133,7 @@ stages:
             provider: 'azurerm'
             command: 'init'
             workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
-            backendServiceArm: 'Azure for Students(dad0afe0-0559-43a5-9469-edf299dd150a)'
+            backendServiceArm: 'Azure for Students(2)(dad0afe0-0559-43a5-9469-edf299dd150a)'
             backendAzureRmStorageAccountName: 'ecommerceinfrastrgacc'
             backendAzureRmContainerName: 'tfstate'
             backendAzureRmKey: 'prod.tfstate'
@@ -152,8 +151,8 @@ stages:
             provider: 'azurerm'
             command: 'plan'
             workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
-            environmentServiceNameAzureRM: 'azure-connection'
             commandOptions: '-var-file="prod.tfvars" -input=false -detailed-exitcode'
+            environmentServiceNameAzureRM: 'Azure for Students(2)(dad0afe0-0559-43a5-9469-edf299dd150a)'
 
         - task: TerraformTask@5
           displayName: "🚀 Terraform Apply"
@@ -161,5 +160,5 @@ stages:
             provider: 'azurerm'
             command: 'apply'
             workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
-            environmentServiceNameAzureRM: 'azure-connection'
             commandOptions: '-var-file="prod.tfvars" -auto-approve -input=false'
+            environmentServiceNameAzureRM: 'Azure for Students(2)(dad0afe0-0559-43a5-9469-edf299dd150a)'
