@@ -134,7 +134,7 @@ stages:
             provider: 'azurerm'
             command: 'init'
             workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
-            backendServiceArm: 'azure-connection'  # Unifica nombre
+            backendServiceArm: 'Azure for Students(dad0afe0-0559-43a5-9469-edf299dd150a)'
             backendAzureRmStorageAccountName: 'ecommerceinfrastrgacc'
             backendAzureRmContainerName: 'tfstate'
             backendAzureRmKey: 'prod.tfstate'
