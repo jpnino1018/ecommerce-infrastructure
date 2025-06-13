@@ -32,7 +32,7 @@ pipeline {
                             export ARM_SUBSCRIPTION_ID=$AZURE_SUBSCRIPTION_ID
 
                             terraform init -input=false
-                            terraform plan -out=tfplan -input=false
+                            terraform plan -out=tfplan -input=false -var-file="${ENV}.tfvars"
                         '''
                     }
                 }
@@ -45,7 +45,7 @@ pipeline {
                     dir("envs/${params.ENV}") {
                         script {
                             def tfCmd = params.DESTROY ?
-                                'terraform destroy -auto-approve' :
+                                'terraform destroy -auto-approve -var-file="${ENV}.tfvars"' :
                                 'terraform apply -input=false tfplan'
 
                             sh """
