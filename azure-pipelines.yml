@@ -32,17 +32,21 @@ stages:
               scriptType: 'ps'
               scriptLocation: 'inlineScript'
               inlineScript: |
+                $envDir = "envs/${{ parameters.environment }}"
+                Set-Location $envDir
+
                 Write-Host "🔧 Initializing Terraform for ${{ parameters.environment }}..."
-                terraform init -backend-config="key=${{ parameters.environment }}.tfstate" .\envs\${{ parameters.environment }}
+                terraform init -backend-config="key=${{ parameters.environment }}.tfstate"
 
                 Write-Host "🔍 Validating Terraform for ${{ parameters.environment }}..."
-                terraform validate .\envs\${{ parameters.environment }}
+                terraform validate
 
                 Write-Host "🧠 Planning Terraform for ${{ parameters.environment }}..."
-                terraform plan -out=tfplan -input=false -var="env=${{ parameters.environment }}" .\envs\${{ parameters.environment }}
+                terraform plan -out=tfplan -input=false -var="env=${{ parameters.environment }}"
 
                 Write-Host "🚀 Applying Terraform plan for ${{ parameters.environment }}..."
                 terraform apply -input=false tfplan
 
                 Write-Host "✅ Deployment for ${{ parameters.environment }} completed!"
             displayName: 'Run Terraform with PowerShell'
+
