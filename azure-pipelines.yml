@@ -35,39 +35,39 @@ stages:
                 $env = "${{ parameters.environment }}"
                 $envDir = "$(System.DefaultWorkingDirectory)\envs\$env"
 
-                Write-Host "📁 Switching to environment directory: $envDir"
+                Write-Host "Switching to environment directory: $envDir"
                 Set-Location $envDir
 
                 Write-Host "🔧 Running terraform init..."
                 terraform init -backend-config="key=$env.tfstate"
 
                 if ($LASTEXITCODE -ne 0) {
-                  Write-Error "❌ terraform init failed"
+                  Write-Error "terraform init failed"
                   exit 1
                 }
 
-                Write-Host "🔍 Running terraform validate..."
+                Write-Host "Running terraform validate..."
                 terraform validate
                 if ($LASTEXITCODE -ne 0) {
-                  Write-Error "❌ terraform validate failed"
+                  Write-Error "terraform validate failed"
                   exit 1
                 }
 
-                Write-Host "🧠 Running terraform plan..."
+                Write-Host "Running terraform plan..."
                 terraform plan -input=false -var="env=$env" -out=tfplan
                 if ($LASTEXITCODE -ne 0) {
-                  Write-Error "❌ terraform plan failed"
+                  Write-Error "terraform plan failed"
                   exit 1
                 }
 
-                Write-Host "🚀 Running terraform apply..."
+                Write-Host "Running terraform apply..."
                 terraform apply -input=false tfplan
                 if ($LASTEXITCODE -ne 0) {
-                  Write-Error "❌ terraform apply failed"
+                  Write-Error "terraform apply failed"
                   exit 1
                 }
 
-                Write-Host "✅ Terraform deployment for $env completed successfully!"
+                Write-Host "Terraform deployment for $env completed successfully!"
             displayName: 'Terraform Deploy with PowerShell'
 
 
