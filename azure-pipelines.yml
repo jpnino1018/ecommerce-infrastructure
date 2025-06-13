@@ -6,13 +6,12 @@ trigger:
       - develop
 
 pool:
-  name: my-machine
+  name: my-machine  # Your self-hosted agent pool
 
 variables:
-  tf_version: '1.8.5'
   rm-rg-name: 'rg-terraform-state'
   rm-account-name: 'ecommerceinfrastrgacc'
-  rm.container-name: 'tfstate'
+  rm-container-name: 'tfstate'
 
 stages:
 
@@ -26,6 +25,11 @@ stages:
       steps:
         - checkout: self
           clean: true
+
+        - powershell: |
+           az account show --output table
+          displayName: "🔍 Check Azure Subscription Context"
+
 
         - task: TerraformTask@5
           inputs:
@@ -43,11 +47,12 @@ stages:
             provider: 'azurerm'
             command: 'validate'
             workingDirectory: '$(System.DefaultWorkingDirectory)/envs/dev'
-        
+
         - task: TerraformTask@5
           inputs:
             provider: 'azurerm'
             command: 'plan'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/dev'
             environmentServiceNameAzureRM: 'azure-connection'
 
         - task: TerraformTask@5
@@ -68,6 +73,10 @@ stages:
         - checkout: self
           clean: true
 
+        - powershell: |
+           az account show --output table
+          displayName: "🔍 Check Azure Subscription Context"
+
         - task: TerraformTask@5
           inputs:
             provider: 'azurerm'
@@ -84,11 +93,12 @@ stages:
             provider: 'azurerm'
             command: 'validate'
             workingDirectory: '$(System.DefaultWorkingDirectory)/envs/stage'
-        
+
         - task: TerraformTask@5
           inputs:
             provider: 'azurerm'
             command: 'plan'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/stage'
             environmentServiceNameAzureRM: 'azure-connection'
 
         - task: TerraformTask@5
@@ -108,6 +118,10 @@ stages:
       steps:
         - checkout: self
           clean: true
+          
+        - powershell: |
+           az account show --output table
+          displayName: "🔍 Check Azure Subscription Context"
 
         - task: TerraformTask@5
           inputs:
@@ -125,11 +139,12 @@ stages:
             provider: 'azurerm'
             command: 'validate'
             workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
-        
+
         - task: TerraformTask@5
           inputs:
             provider: 'azurerm'
             command: 'plan'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/envs/prod'
             environmentServiceNameAzureRM: 'azure-connection'
 
         - task: TerraformTask@5
