@@ -1,9 +1,11 @@
-trigger: none
-pr: none
+trigger:
+  branches:
+    include:
+      - main  # or your default branch
 
 parameters:
   - name: environment
-    displayName: 'Selecciona un entorno'
+    displayName: Environment to deploy
     type: string
     default: dev
     values:
@@ -11,44 +13,51 @@ parameters:
       - stage
       - prod
 
-    
+pool:
+  name: my-machine
+
+variables:
+  TF_IN_AUTOMATION: true
+
 stages:
-  - stage: TerraformDeploy
-    displayName: 'Terraform en ${{ parameters.environment }}'
+  - stage: Deploy
     jobs:
-      - job: apply
-        displayName: 'Deploy ${{ parameters.environment }}'
-        pool:
-          name: my-machine 
+      - job: Terraform_Deployment
         steps:
-          - task: TerraformTask@5
+          - task: UsePythonVersion@0
             inputs:
-              provider: 'azurerm'
-              command: 'init'
-              workingDirectory: 'envs/${{ parameters.environment }}'
-              backendServiceArm: 'azure-connection'
-              backendAzureRmResourceGroupName: 'tfstate-rg'
-              backendAzureRmStorageAccountName: 'tfstateaccicesi'
-              backendAzureRmContainerName: 'tfstate'
-              backendAzureRmKey: 'dev.terraform.tfstate'
-          
-          - task: TerraformTask@5
+              versionSpec: '3.x'
+              addToPath: true
+
+          - task: TerraformInstaller@1
             inputs:
-              provider: 'azurerm'
-              command: 'plan'
-              workingDirectory: 'terraform/envs/${{ parameters.environment }}'
-              environmentServiceNameAzureRM: 'azure-connection'
-              
-          - task: TerraformTask@5
+              terraformVersion: '1.6.6'  # adjust to match your version
+
+          - script: |
+              echo "##[section]🔧 Initializing Terraform..."
+              terraform init -backend-config="key=${{ parameters.environment }}.tfstate" ./envs/${{ parameters.environment }}
+            displayName: 'Terraform Init'
+
+          - script: |
+              echo "##[section]🔍 Validating Terraform..."
+              terraform validate ./envs/${{ parameters.environment }}
+            displayName: 'Terraform Validate'
+
+          - script: |
+              echo "##[section]🧠 Planning Terraform..."
+              terraform plan -out=tfplan -input=false -var="env=${{ parameters.environment }}" ./envs/${{ parameters.environment }}
+            displayName: 'Terraform Plan'
+
+          - script: |
+              echo "##[section]🚀 Applying Terraform..."
+              terraform apply -input=false tfplan
+            displayName: 'Terraform Apply'
+
+          - task: AzureCLI@2
             inputs:
-              provider: 'azurerm'
-              command: 'validate'
-              workingDirectory: 'envs/${{ parameters.environment }}'
-              environmentServiceNameAzureRM: 'azure-connection'
-              
-          - task: TerraformTask@5
-            inputs:
-              provider: 'azurerm'
-              command: 'apply'
-              workingDirectory: 'envs/${{ parameters.environment }}'
-              environmentServiceNameAzureRM: 'azure-connection'
+              azureSubscription: 'azure-connection'  # Your service connection
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                echo "✅ Infrastructure for ${{ parameters.environment }} deployed!"
+            displayName: '✅ Post-deployment Confirmation'
